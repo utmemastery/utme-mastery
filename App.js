@@ -1,20 +1,30 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { NavigationContainer } from '@react-navigation/native';
+import AppNavigator from './src/navigation/AppNavigator';
+import OnboardingNavigator from './src/navigation/OnboardingNavigator';
+import theme from './src/constants/theme';
 
 export default function App() {
+  // Simulate onboarding completion (replace with real logic later)
+  const [onboarded, setOnboarded] = useState(false);
+
+  // Listen for onboarding finish (simulate with PermissionsScreen's navigation.replace('Main'))
+  // In a real app, use context or global state
+  const handleOnboardingFinish = () => {
+    console.log('Onboarding finished, switching to main app');
+    setOnboarded(true);
+  };
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <PaperProvider theme={theme}>
+      <NavigationContainer>
+        {onboarded ? (
+          <AppNavigator />
+        ) : (
+          <OnboardingNavigator onFinish={handleOnboardingFinish} />
+        )}
+      </NavigationContainer>
+    </PaperProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

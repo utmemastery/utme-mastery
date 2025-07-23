@@ -1,36 +1,89 @@
-import { DefaultTheme } from 'react-native-paper';
+// src/constants/theme.js
 
-// Modern, accessible color palette
-const colors = {
-  primary: '#0057FF',        // Deep blue
-  accent: '#FFB300',         // Vibrant gold
-  background: '#F7F9FC',     // Soft off-white
-  surface: '#FFFFFF',        // Pure white
-  error: '#D32F2F',          // Strong red
-  success: '#388E3C',        // Deep green
-  warning: '#FFA000',        // Amber
-  info: '#0288D1',           // Blue
-  text: '#1A1A1A',           // Near-black
-  disabled: '#BDBDBD',       // Muted gray
-  placeholder: '#757575',    // Medium gray
-  border: '#E0E0E0',         // Light gray
+const COLORS = {
+  // Base brand colors
+  primary: "#2A4AE4", // Deep royal blue - trust, intelligence
+  secondary: "#FFD60A", // Energetic yellow - alertness, motivation
+  accent: "#FF5C5C", // Red for errors or critical alerts
+
+  // Neutral palette
+  background: "#FFFFFF",  // Main screen background
+  surface: "#F5F7FA",     // Card backgrounds
+  border: "#E0E6ED",      // Subtle borders
+
+  textPrimary: "#1A1A1A",   // Headers and body
+  textSecondary: "#5E6C84", // Subheadings
+  textMuted: "#9AA5B1",     // Less important text
+
+  success: "#10B981",  // Green - right answers
+  warning: "#F59E0B",  // Amber - attention
+  danger: "#EF4444",   // Red - wrong answers
+
+  // Utility
+  overlay: "rgba(0, 0, 0, 0.4)",
+  white: "#FFFFFF",
+  black: "#000000",
 };
 
-const theme = {
-  ...DefaultTheme,
-  roundness: 8,
-  colors: {
-    ...DefaultTheme.colors,
-    ...colors,
-  },
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-  },
-  // Add more design tokens as needed
+const FONTS = {
+  regular: "Poppins-Regular",
+  medium: "Poppins-Medium",
+  semiBold: "Poppins-SemiBold",
+  bold: "Poppins-Bold",
 };
 
-export default theme; 
+const SIZES = {
+  // Font sizes
+  h1: 32,
+  h2: 28,
+  h3: 24,
+  h4: 20,
+  h5: 18,
+  h6: 16,
+  body: 14,
+  small: 12,
+
+  // Spacing
+  padding: 16,
+  margin: 16,
+  radius: 12,
+  cardRadius: 16,
+  inputHeight: 50,
+  buttonHeight: 48,
+};
+
+const SHADOWS = {
+  card: {
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  modal: {
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+};
+
+const THEMES = {
+  light: {
+    ...COLORS,
+    mode: "light",
+    background: COLORS.background,
+    text: COLORS.textPrimary,
+    surface: COLORS.surface,
+  },
+  dark: {
+    ...COLORS,
+    mode: "dark",
+    background: "#121212",
+    surface: "#1E1E1E",
+    text: "#F4F4F4",
+  },
+};
+
+export { COLORS, FONTS, SIZES, SHADOWS, THEMES };

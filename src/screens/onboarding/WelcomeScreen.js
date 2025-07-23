@@ -1,34 +1,20 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import PrimaryButton from '../../components/PrimaryButton';
+import { COLORS, SIZES, FONTS } from '../../constants/theme';
 
 export default function WelcomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.logo}>UTME</Text>
-        <Text style={styles.tagline}>Mastery</Text>
-      </View>
-      
-      <View style={styles.content}>
-        <Text variant="headlineLarge" style={styles.title}>
-          Welcome to UTME Mastery!
-        </Text>
-        <Text variant="bodyLarge" style={styles.subtitle}>
-          Your journey to exam excellence starts here. 
-          Master the UTME with evidence-based learning and smart practice.
-        </Text>
-      </View>
-
-      <View style={styles.footer}>
-        <PrimaryButton 
-          style={styles.button} 
-          onPress={() => navigation.navigate('Auth')}
-        >
-          Get Started
-        </PrimaryButton>
-      </View>
+      <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+      <Text style={styles.title}>Welcome to UTME Mastery</Text>
+      <Text style={styles.subtitle}>
+        Your personalized path to UTME success starts here. Discover your strengths, set your goals, and master every subject with confidence.
+      </Text>
+      <PrimaryButton style={styles.button} onPress={() => navigation.navigate('PermissionsScreen')}>
+        Get Started
+      </PrimaryButton>
     </View>
   );
 }
@@ -36,48 +22,36 @@ export default function WelcomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F9FC',
-  },
-  header: {
-    flex: 1,
-    justifyContent: 'center',
+    backgroundColor: COLORS.background,
     alignItems: 'center',
-    paddingTop: 60,
+    justifyContent: 'center',
+    padding: SIZES.padding,
   },
   logo: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#0057FF',
-    letterSpacing: 2,
-  },
-  tagline: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFB300',
-    marginTop: 4,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 32,
+    width: 120,
+    height: 120,
+    marginBottom: SIZES.margin * 2,
   },
   title: {
-    marginBottom: 16,
+    color: COLORS.primary,
+    fontFamily: FONTS.bold,
+    fontSize: SIZES.h2,
     textAlign: 'center',
-    color: '#1A1A1A',
-    fontWeight: 'bold',
+    marginBottom: SIZES.margin,
   },
   subtitle: {
+    color: COLORS.textSecondary,
+    fontFamily: FONTS.regular,
+    fontSize: SIZES.body,
     textAlign: 'center',
-    color: '#757575',
+    marginBottom: SIZES.margin * 2,
     lineHeight: 24,
   },
-  footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
   button: {
-    borderRadius: 12,
-    height: 56,
+    width: '100%',
+    marginTop: SIZES.margin,
+    borderRadius: SIZES.radius,
+    height: SIZES.buttonHeight,
+    justifyContent: 'center',
   },
-}); 
+});

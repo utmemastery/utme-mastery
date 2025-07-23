@@ -1,9 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// Prisma schema file
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,195 +8,390 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model for students
-model User {
-  id                  Int                  @id @default(autoincrement())
-  email               String               @unique
-  username            String               @unique
-  passwordHash        String
-  firstName           String?
-  lastName            String?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  role                Role                 @default(STUDENT)
-  studySessions       StudySession[]
-  quizAttempts        QuizAttempt[]
-  progress            UserProgress[]
-  leaderboard         Leaderboard[]
-  studyPlans          StudyPlan[]
-  recommendationLogs  RecommendationLog[]
-  performancePredictions PerformancePrediction[]
-  learningProfile     LearningProfile?
-  flashcardReviews    FlashcardReview[]
-  notifications       Notification[]
-  studyStreak         StudyStreak?
-  mockExams           MockExam[]
-  studyGroups         StudyGroupMember[]
-  feedback            Feedback[]
-  
-  @@index([email])
-  @@index([role])
-}
-
-// Role enum for user types
+// Enums
 enum Role {
   STUDENT
   ADMIN
-  MODERATOR
 }
 
-// Syllabus model for storing syllabus metadata
-model Syllabus {
-  id            Int             @id @default(autoincrement())
-  subjectId     Int
-  subject       Subject         @relation(fields: [subjectId], references: [id])
-  objectives    String[]        // Array of objective descriptions
-  recommendedTexts String[]     // Array of recommended text titles
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-}
-
-// Subject model to align with UTME syllabus
-model Subject {
-  id                  Int                  @id @default(autoincrement())
-  name                String               @unique
-  description         String?
-  topics              Topic[]
-  questions           Question[]
-  flashcards          Flashcard[]
-  syllabi             Syllabus[]
-  passages            Passage[]
-  quizAttempts        QuizAttempt[]
-  
-  @@index([name])
-}
-
-// Topic model for syllabus breakdown
-model Topic {
-  id                  Int                  @id @default(autoincrement())
-  subjectId           Int
-  subject             Subject              @relation(fields: [subjectId], references: [id])
-  name                String
-  description         String?
-  questions           Question[]
-  userProgress        UserProgress[]
-  flashcards          Flashcard[]
-  passages            Passage[]
-  
-  @@index([subjectId])
-  @@index([name])
-}
-
-// Passage model for comprehension and cloze tests
-model Passage {
-  id            Int             @id @default(autoincrement())
-  subjectId     Int
-  subject       Subject         @relation(fields: [subjectId], references: [id])
-  topicId       Int?
-  topic         Topic?          @relation(fields: [topicId], references: [id])
-  text          String          // Passage or cloze text
-  passageType   PassageType     // COMPREHENSION or CLOZE
-  discipline    String?         // E.g., "Science", "Literature"
-  wordCount     Int?            // Word count for passage
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  questions     Question[]
-  
-  @@index([subjectId, topicId])
-  @@index([passageType])
-}
-
-// PassageType enum
-enum PassageType {
-  COMPREHENSION
-  CLOZE
-}
-
-// QuestionType enum
-enum QuestionType {
-  COMPREHENSION
-  CLOZE
-  SYNONYM
-  ANTONYM
-  GRAMMAR
-  SENTENCE_INTERPRETATION
-  VOWEL
-  CONSONANT
-  RHYME
-  WORD_STRESS
-  EMPHATIC_STRESS
-  COMPUTATIONAL
-  REASONING
-  DESCRIPTIVE
-  CRITICAL_THINKING     
-  SCENARIO_BASED     
-}
-
-// Question model for the question bank
-model Question {
-  id                Int                  @id @default(autoincrement())
-  subjectId         Int
-  subject           Subject              @relation(fields: [subjectId], references: [id])
-  topicId           Int?
-  topic             Topic?               @relation(fields: [topicId], references: [id])
-  passageId         Int?
-  passage           Passage?             @relation(fields: [passageId], references: [id])
-  questionType      QuestionType
-  text              String
-  options           Json                 // Store options as JSON array: [{text: "Option A", isCorrect: false}, ...]
-  correctAnswer     String               // Reference to correct option text for validation
-  difficulty        DifficultyLevel
-  explanation       String?              // Detailed explanation for learning
-  aiDifficultyScore Float?               // AI-calculated difficulty score
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
-  quizQuestions     QuizQuestion[]
-  studyTasks        StudyTask[]
-  mockExamQuestions MockExamQuestion[]
-  
-  @@index([subjectId, topicId])
-  @@index([difficulty])
-  @@index([questionType])
-}
-
-// Difficulty level for questions
 enum DifficultyLevel {
   EASY
   MEDIUM
   HARD
 }
 
-// Flashcard model for smart flashcard system
+enum CognitiveLevel {
+  RECALL          // Factual, memory-based e.g. "What is the formula for acceleration?"
+  COMPREHENSION   // Understanding e.g. "Explain the concept of inertia"
+  APPLICATION     // Applying knowledge to solve problems
+  ANALYSIS        // Break down complex ideas e.g. interpreting graphs
+  SYNTHESIS       // Combine elements to form a new whole
+  EVALUATION      // Judging based on criteria (rare in UTME but may apply in higher-level questions)
+}
+
+
+enum FlashcardType {
+  DEFINITION
+  CONCEPT
+  QUESTION_ANSWER
+  FILL_IN_THE_BLANK
+  DIAGRAM_LABELING
+  QUICK_FACT
+  MNEMONIC
+}
+
+
+enum QuizType {
+  PRACTICE
+  TIMED
+  ADAPTIVE
+}
+
+enum ExamType {
+  FULL_UTME
+  SUBJECT_SPECIFIC
+}
+
+enum PassageType {
+  COMPREHENSION
+  CLOZE
+}
+
+// User model (updated)
+model User {
+  id                  Int                  @id @default(autoincrement())
+  email               String               @unique
+  username            String               @unique
+  passwordHash        String
+  avatarUrl     String?
+  firstName           String?
+  lastName            String?
+  learningStyle       String?              // Moved from LearningProfile
+  onboardingDone Boolean @default(false)
+  avgResponseTime     Float?               // Moved from LearningProfile
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  role                Role                 @default(STUDENT)
+  selectedSubjects    String[]             // User's chosen subjects
+  aspiringCourse      String? 
+  goalScore    Int?             // Updated field for user's aspiring course
+  studySessions       StudySession[]
+  quizAttempts        QuizAttempt[]
+  progress            UserProgress[]
+  studyPlans          StudyPlan[]
+  flashcardReviews    FlashcardReview[]
+  mockExams           MockExam[]
+  feedback            Feedback[]
+  questionAttempts    QuestionAttempt[]
+  // Added opposite relation fields:
+  topicMasteries      TopicMastery[]
+  reviewQueues        ReviewQueue[]
+  performanceSnapshots PerformanceSnapshot[]
+  experimentGroups    ExperimentGroup[]
+  // Auth fields
+  emailVerified       Boolean              @default(false)
+  verificationToken   String?
+  resetToken          String?
+  resetTokenExpiry    DateTime?
+  @@index([email])
+  @@index([role])
+}
+
+// Subject model (updated)
+model Subject {
+  id                  Int                  @id @default(autoincrement())
+  name                String               @unique
+  description         String?
+  sections            Section[]
+  topics              Topic[]
+  questions           Question[]
+  flashcards          Flashcard[]
+  syllabi             Syllabus[]
+  passages            Passage[]
+  images              Image[]
+  quizAttempts        QuizAttempt[]
+  quizSubjects        QuizSubject[]
+  mockExamSubjects    MockExamSubject[]
+  studySessions       StudySession[]
+  // Added opposite relation field:
+  performanceSnapshots PerformanceSnapshot[]
+  @@index([name])
+}
+
+// Section model (unchanged)
+model Section {
+  id          Int       @id @default(autoincrement())
+  subjectId   Int
+  subject     Subject   @relation(fields: [subjectId], references: [id])
+  name        String
+  description String?
+  topics      Topic[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  mockExamQuestions MockExamQuestion[]
+  @@index([subjectId])
+}
+
+// Topic model (unchanged)
+model Topic {
+  id            Int       @id @default(autoincrement())
+  subjectId     Int
+  subject       Subject   @relation(fields: [subjectId], references: [id])
+  sectionId     Int?
+  section       Section?  @relation(fields: [sectionId], references: [id])
+  parentTopicId Int?
+  parentTopic   Topic?    @relation("Subtopics", fields: [parentTopicId], references: [id])
+  subtopics     Topic[]   @relation("Subtopics")
+  name          String
+  description   String?
+  objectives    String[]
+  questions     Question[]
+  questionSubtopics Question[] @relation("QuestionSubtopic")
+  userProgress  UserProgress[]
+  userProgressSubtopics UserProgress[] @relation("UserProgressSubtopic")
+  flashcards    Flashcard[]
+  flashcardSubtopics Flashcard[] @relation("FlashcardSubtopic")
+  passages      Passage[]
+  images        Image[]
+  studyTasks    StudyTask[]
+  studyTaskSubtopics StudyTask[] @relation("StudyTaskSubtopic")
+  studySessions StudySession[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  // Added opposite relation field:
+  topicMasteries TopicMastery[]
+  @@index([subjectId])
+  @@index([sectionId])
+  @@index([parentTopicId])
+}
+
+model TopicMastery {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  topicId    Int
+  mastery    Float     // 0.0 to 1.0
+  updatedAt  DateTime  @updatedAt
+
+  user       User      @relation(fields: [userId], references: [id])
+  topic      Topic     @relation(fields: [topicId], references: [id])
+
+  @@unique([userId, topicId])
+  @@index([mastery])
+}
+
+
+// Syllabus model (unchanged)
+model Syllabus {
+  id               Int              @id @default(autoincrement())
+  subjectId        Int
+  subject          Subject          @relation(fields: [subjectId], references: [id])
+  objectives       String[]
+  recommendedTexts RecommendedText[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  @@index([subjectId])
+}
+
+// RecommendedText model (unchanged)
+model RecommendedText {
+  id          Int       @id @default(autoincrement())
+  syllabusId   Int
+  syllabus     Syllabus  @relation(fields: [syllabusId], references: [id])
+  title       String
+  author      String?
+  year        Int?
+  publisher   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  @@index([syllabusId])
+}
+
+// Passage model (unchanged)
+model Passage {
+  id            Int             @id @default(autoincrement())
+  subjectId     Int
+  subject       Subject         @relation(fields: [subjectId], references: [id])
+  topicId       Int?
+  topic         Topic?          @relation(fields: [topicId], references: [id])
+  text          String
+  passageType   PassageType
+  discipline    String?
+  wordCount     Int?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  questions     Question[]
+  @@index([subjectId, topicId])
+  @@index([passageType])
+}
+
+// Option model (unchanged)
+model Option {
+  id          Int       @id @default(autoincrement())
+  questionId  Int
+  question    Question  @relation(fields: [questionId], references: [id])
+  text        String
+  isCorrect   Boolean
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  @@index([questionId])
+}
+
+// Image model (new)
+model Image {
+  id          Int       @id @default(autoincrement())
+  subjectId   Int?      // Optional, for scoping to subjects (e.g., Biology)
+  subject     Subject?  @relation(fields: [subjectId], references: [id])
+  topicId     Int?      // Optional, for syllabus alignment
+  topic       Topic?    @relation(fields: [topicId], references: [id])
+  url         String    // URL to image (e.g., S3, CDN)
+  description String?   // Optional description for accessibility or context
+  questions   Question[] // Questions linked to this image
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  @@index([subjectId, topicId])
+}
+
+// Question model (updated)
+model Question {
+  id                Int                  @id @default(autoincrement())
+  subjectId         Int
+  subject           Subject              @relation(fields: [subjectId], references: [id])
+  topicId           Int
+  topic             Topic                @relation(fields: [topicId], references: [id])
+  subtopicId        Int?
+  subtopic          Topic?               @relation(fields: [subtopicId], references: [id], name: "QuestionSubtopic")
+  passageId         Int?
+  passage           Passage?             @relation(fields: [passageId], references: [id])
+  imageId           Int?                 // Added for image association
+  image             Image?               @relation(fields: [imageId], references: [id])
+  text              String
+  options           Option[]
+  correctOptionId   Int?
+  cognitiveLevel    CognitiveLevel?
+  difficulty        DifficultyLevel
+  explanation       String?
+  aiDifficultyScore Float?
+  tags              String[]
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  quizQuestions     QuizQuestion[]
+  studyTasks        StudyTask[]
+  mockExamQuestions MockExamQuestion[]
+  questionAttempts  QuestionAttempt[]
+  // Added opposite relation field:
+  reviewQueues      ReviewQueue[]
+  @@index([subjectId, topicId, subtopicId])
+  @@index([difficulty])
+  @@index([imageId])
+}
+
+model QuestionAttempt {
+  id            String   @id @default(cuid())
+  userId        Int
+  questionId    Int
+  isCorrect     Boolean
+  selectedOption String?
+  timeTaken     Int       // in seconds
+  attemptedAt   DateTime  @default(now())
+
+  user          User      @relation(fields: [userId], references: [id])
+  question      Question  @relation(fields: [questionId], references: [id])
+}
+
+model ReviewQueue {
+  id             Int       @id @default(autoincrement())
+  userId         Int
+  questionId     Int
+  nextReview     DateTime
+  interval       Int       @default(1)     // In days
+  easeFactor     Float     @default(2.5)   // SuperMemo EF
+  repetitions    Int       @default(0)
+  lastReview     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user           User      @relation(fields: [userId], references: [id])
+  question       Question  @relation(fields: [questionId], references: [id])
+
+  @@index([userId, questionId])
+  @@index([nextReview])
+}
+
+
+// Flashcard model (unchanged)
 model Flashcard {
   id                Int               @id @default(autoincrement())
   subjectId         Int
   subject           Subject           @relation(fields: [subjectId], references: [id])
-  topicId           Int?
-  topic             Topic?            @relation(fields: [topicId], references: [id])
-  prompt            String            // Front of the flashcard
-  answer            String            // Back of the flashcard
-  flashcardType     FlashcardType?    // New: E.g., VOCABULARY, FORMULA
-  difficulty        DifficultyLevel
-  explanation       String?           // Optional explanation
-  aiDifficultyScore Float?            // AI-calculated difficulty
+  topicId           Int
+  topic             Topic             @relation(fields: [topicId], references: [id])
+  subtopicId        Int?
+  subtopic          Topic?            @relation(fields: [subtopicId], references: [id], name: "FlashcardSubtopic")
+  prompt            String
+  answer            String
+  flashcardType     FlashcardType?
+  difficulty        DifficultyLevel?
+  explanation       String?
+  aiDifficultyScore Float?
+  mediaUrl          String?
+  tags              String[]
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   reviews           FlashcardReview[]
   studyTasks        StudyTask[]
-  
-  @@index([subjectId, topicId])
+  @@index([subjectId, topicId, subtopicId])
   @@index([difficulty])
 }
 
-// FlashcardType enum
-enum FlashcardType {
-  VOCABULARY
-  FORMULA
-  DEFINITION
-  PRONUNCIATION
+// QuizSubject model (unchanged)
+model QuizSubject {
+  id            Int         @id @default(autoincrement())
+  quizAttemptId Int
+  quizAttempt   QuizAttempt @relation(fields: [quizAttemptId], references: [id])
+  subjectId     Int
+  subject       Subject     @relation(fields: [subjectId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  @@index([quizAttemptId, subjectId])
 }
 
-// FlashcardReview model for tracking flashcard interactions
+// QuizAttempt model (updated)
+model QuizAttempt {
+  id            Int             @id @default(autoincrement())
+  userId        Int
+  user          User            @relation(fields: [userId], references: [id])
+  startTime     DateTime        @default(now())
+  endTime       DateTime?
+  questionCount Int?            // Added for number of questions
+  quizType      QuizType?
+  quizQuestions QuizQuestion[]
+  subjectId     Int?
+  subject       Subject?        @relation(fields: [subjectId], references: [id])
+  quizSubjects  QuizSubject[]
+  studyTasks    StudyTask[]     // Added relation
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  @@index([userId, startTime])
+  @@index([subjectId])
+}
+
+// QuizQuestion model (unchanged)
+model QuizQuestion {
+  id            Int             @id @default(autoincrement())
+  quizAttemptId Int
+  quizAttempt   QuizAttempt     @relation(fields: [quizAttemptId], references: [id])
+  questionId    Int
+  question      Question        @relation(fields: [questionId], references: [id])
+  userAnswer    Json?
+  isCorrect     Boolean?
+  responseTime  Int?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  @@index([quizAttemptId])
+  @@index([questionId])
+}
+
+// FlashcardReview model (unchanged)
 model FlashcardReview {
   id                Int               @id @default(autoincrement())
   userId            Int
@@ -209,79 +399,38 @@ model FlashcardReview {
   flashcardId       Int
   flashcard         Flashcard         @relation(fields: [flashcardId], references: [id])
   reviewDate        DateTime          @default(now())
-  recallSuccess     Boolean           // Whether user recalled answer correctly
-  confidenceScore   Float?            // User's self-reported confidence (0-1)
-  nextReview        DateTime?         // Scheduled next review
-  easeFactor        Float             @default(2.5) // For SuperMemo
-  interval          Int               @default(1)   // Days until next review
-  
+  responseTimeMs Int?
+  recallSuccess     Boolean
+  confidenceScore   Float?
+  reviewRating      Int?      // 1–4: Again, Hard, Good, Easy
+  nextReview        DateTime?
+  easeFactor        Float             @default(2.5)
+  interval          Int               @default(1)
+  notes             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
   @@index([userId, flashcardId])
   @@index([nextReview])
 }
 
-// StudySession model for tracking user study time
+// StudySession model (unchanged)
 model StudySession {
   id            Int             @id @default(autoincrement())
   userId        Int
   user          User            @relation(fields: [userId], references: [id])
+  subjectId     Int?
+  subject       Subject?        @relation(fields: [subjectId], references: [id])
+  topicId       Int?
+  topic         Topic?          @relation(fields: [topicId], references: [id])
   startTime     DateTime
   endTime       DateTime?
-  duration      Int?            // Duration in minutes
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
-  
   @@index([userId, startTime])
+  @@index([subjectId, topicId])
 }
 
-// QuizAttempt model for tracking quiz performance
-model QuizAttempt {
-  id            Int             @id @default(autoincrement())
-  userId        Int
-  user          User            @relation(fields: [userId], references: [id])
-  startTime     DateTime        @default(now())
-  endTime       DateTime?
-  score         Float?
-  quizQuestions QuizQuestion[]
-  subjectId     Int?            // For single-subject quizzes
-  subject       Subject?        @relation(fields: [subjectId], references: [id])
-  subjects      Json?           // JSON array of subject IDs for multi-subject quizzes
-  
-  @@index([userId, startTime])
-  @@index([subjectId])
-}
-
-// QuizQuestion model for linking questions to quiz attempts
-model QuizQuestion {
-  id            Int             @id @default(autoincrement())
-  quizAttemptId Int
-  quizAttempt   QuizAttempt     @relation(fields: [quizAttemptId], references: [id])
-  questionId    Int
-  question      Question        @relation(fields: [questionId], references: [id])
-  userAnswer    String?         // User's selected answer
-  isCorrect     Boolean?
-  responseTime  Int?            // Time taken to answer (in seconds)
-  
-  @@index([quizAttemptId])
-  @@index([questionId])
-}
-
-// UserProgress model for tracking progress per topic
-model UserProgress {
-  id            Int             @id @default(autoincrement())
-  userId        Int
-  user          User            @relation(fields: [userId], references: [id])
-  topicId       Int
-  topic         Topic           @relation(fields: [topicId], references: [id])
-  completion    Float           @default(0.0) // Percentage completion
-  lastReviewed  DateTime?
-  nextReview    DateTime?       // For spaced repetition
-  masteryScore  Float?          // AI-calculated score
-  
-  @@index([userId, topicId])
-  @@index([nextReview])
-}
-
-// StudyPlan model for personalized study schedules
+// StudyPlan model (unchanged)
 model StudyPlan {
   id            Int             @id @default(autoincrement())
   userId        Int
@@ -292,11 +441,12 @@ model StudyPlan {
   endDate       DateTime?
   tasks         StudyTask[]
   aiGenerated   Boolean         @default(false)
-  
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   @@index([userId, startDate])
 }
 
-// StudyTask model for individual tasks in a study plan
+// StudyTask model (updated)
 model StudyTask {
   id            Int             @id @default(autoincrement())
   studyPlanId   Int
@@ -304,173 +454,132 @@ model StudyTask {
   description   String
   dueDate       DateTime
   completed     Boolean         @default(false)
-  priority      Float?          // AI-assigned priority score
+  priority      Float?
   flashcardId   Int?
   flashcard     Flashcard?      @relation(fields: [flashcardId], references: [id])
   questionId    Int?
   question      Question?       @relation(fields: [questionId], references: [id])
-  
+  topicId       Int?
+  topic         Topic?          @relation(fields: [topicId], references: [id])
+  subtopicId    Int?
+  subtopic      Topic?          @relation(fields: [subtopicId], references: [id], name: "StudyTaskSubtopic")
+  quizAttemptId Int?            // Added for quiz scheduling
+  quizAttempt   QuizAttempt?    @relation(fields: [quizAttemptId], references: [id])
+  mockExamId    Int?            // Added for mock exam scheduling
+  mockExam      MockExam?       @relation(fields: [mockExamId], references: [id])
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   @@index([studyPlanId, dueDate])
   @@index([completed])
+  @@index([topicId, subtopicId])
+  @@index([quizAttemptId, mockExamId])
 }
 
-// Leaderboard model for gamification
-model Leaderboard {
-  id            Int             @id @default(autoincrement())
-  userId        Int
-  user          User            @relation(fields: [userId], references: [id])
-  score         Int             @default(0)
-  rank          Int?
-  updatedAt     DateTime        @updatedAt
-  
-  @@index([score])
-  @@index([rank])
-}
-
-// LearningProfile model for AI-driven personalization
-model LearningProfile {
-  id                    Int             @id @default(autoincrement())
-  userId                Int             @unique
-  user                  User            @relation(fields: [userId], references: [id])
-  learningStyle         String?         // E.g., "visual", "kinesthetic"
-  avgResponseTime       Float?          // Average time to answer questions
-  weakTopics            Json?           // JSON array of topic IDs
-  confidenceLevel       Float?          // AI-estimated confidence score
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
-}
-
-// RecommendationLog model for tracking AI recommendations
-model RecommendationLog {
+// UserProgress model (updated)
+model UserProgress {
   id                Int             @id @default(autoincrement())
   userId            Int
   user              User            @relation(fields: [userId], references: [id])
-  recommendationType String          // E.g., "question", "flashcard", "challenge"
-  recommendationData Json            // JSON object with details
-  confidenceScore   Float           // AI confidence in recommendation
-  createdAt         DateTime        @default(now())
-  
-  @@index([userId, createdAt])
-  @@index([recommendationType])
-}
-
-// PerformancePrediction model for AI-driven score predictions
-model PerformancePrediction {
-  id                Int             @id @default(autoincrement())
-  userId            Int
-  user              User            @relation(fields: [userId], references: [id])
-  predictedScore    Float           // Predicted UTME score
-  confidenceInterval Float?         // Confidence interval
-  weakAreas         Json?           // JSON array of weak topics/subjects
+  topicId           Int
+  topic             Topic           @relation(fields: [topicId], references: [id])
+  subtopicId        Int?
+  subtopic          Topic?          @relation(fields: [subtopicId], references: [id], name: "UserProgressSubtopic")
+  completion        Float           @default(0.0)
+  lastReviewed      DateTime?
+  nextReview        DateTime?
+  masteryScore      Float?
+  predictedScore    Float?          // Moved from PerformancePrediction
+  confidenceInterval Float?         // Moved from PerformancePrediction
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
-  
-  @@index([userId, createdAt])
+  @@index([userId, topicId, subtopicId])
+  @@index([nextReview])
 }
 
-// Notification model for user notifications
-model Notification {
-  id          Int       @id @default(autoincrement())
-  userId      Int
-  user        User      @relation(fields: [userId], references: [id])
-  type        String    // "reminder", "achievement", "recommendation", "streak"
-  title       String
-  message     String
-  read        Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  
-  @@index([userId, read])
-  @@index([type])
-  @@index([createdAt])
+model PerformanceSnapshot {
+  id                Int       @id @default(autoincrement())
+  userId            Int
+  subjectId         Int
+  predictedScore    Float
+  confidenceRange   Float?
+  takenAt           DateTime  @default(now())
+
+  user              User      @relation(fields: [userId], references: [id])
+  subject           Subject   @relation(fields: [subjectId], references: [id])
 }
 
-// StudyStreak model for tracking study habits
-model StudyStreak {
-  id              Int       @id @default(autoincrement())
-  userId          Int       @unique
-  user            User      @relation(fields: [userId], references: [id])
-  currentStreak   Int       @default(0)
-  longestStreak   Int       @default(0)
-  lastStudyDate   DateTime?
-  updatedAt       DateTime  @updatedAt
+
+// MockExamSubject model (unchanged)
+model MockExamSubject {
+  id            Int         @id @default(autoincrement())
+  mockExamId    Int
+  mockExam      MockExam    @relation(fields: [mockExamId], references: [id])
+  subjectId     Int
+  subject       Subject     @relation(fields: [subjectId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  @@index([mockExamId, subjectId])
 }
 
-// MockExam model for full UTME simulations
+// MockExam model (updated)
 model MockExam {
-  id              Int       @id @default(autoincrement())
+  id              Int               @id @default(autoincrement())
   userId          Int
-  user            User      @relation(fields: [userId], references: [id])
+  user            User              @relation(fields: [userId], references: [id])
   title           String
   description     String?
-  startTime       DateTime  @default(now())
+  startTime       DateTime          @default(now())
   endTime         DateTime?
-  totalScore      Float?
-  timeLimit       Int?      // Time limit in minutes
-  subjects        Json      // Array of subject IDs
+  questionCount   Int?              // Added for number of questions
+  timeLimit       Int?
+  examType        ExamType?
+  mockExamSubjects MockExamSubject[]
   questions       MockExamQuestion[]
-  
+  studyTasks      StudyTask[]       // Added relation
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
   @@index([userId, startTime])
 }
 
-// MockExamQuestion model for linking questions to mock exams
+// MockExamQuestion model (unchanged)
 model MockExamQuestion {
   id            Int       @id @default(autoincrement())
   mockExamId    Int
   mockExam      MockExam  @relation(fields: [mockExamId], references: [id])
   questionId    Int
   question      Question  @relation(fields: [questionId], references: [id])
-  userAnswer    String?
+  sectionId     Int?
+  section       Section?  @relation(fields: [sectionId], references: [id])
+  userAnswer    Json?
   isCorrect     Boolean?
-  responseTime  Int?      // Time taken to answer (in seconds)
-  
-  @@index([mockExamId])
-  @@index([questionId])
-}
-
-// StudyGroup model for collaborative learning
-model StudyGroup {
-  id              Int       @id @default(autoincrement())
-  name            String
-  description     String?
-  maxMembers      Int       @default(10)
-  isPrivate       Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  members         StudyGroupMember[]
-  
-  @@index([isPrivate])
-}
-
-// StudyGroupMember model for group membership
-model StudyGroupMember {
-  id            Int         @id @default(autoincrement())
-  userId        Int
-  user          User        @relation(fields: [userId], references: [id])
-  studyGroupId  Int
-  studyGroup    StudyGroup  @relation(fields: [studyGroupId], references: [id])
-  role          String      @default("member") // "admin", "member"
-  joinedAt      DateTime    @default(now())
-  
-  @@unique([userId, studyGroupId])
-  @@index([studyGroupId])
-  @@index([role])
-}
-
-// Feedback model for user feedback and bug reports
-model Feedback {
-  id            Int       @id @default(autoincrement())
-  userId        Int
-  user          User      @relation(fields: [userId], references: [id])
-  type          String    // "bug", "feature", "general", "question"
-  title         String
-  description   String
-  priority      String    @default("medium") // "low", "medium", "high", "critical"
-  status        String    @default("open")   // "open", "in_progress", "resolved", "closed"
+  responseTime  Int?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
-  @@index([userId, createdAt])
-  @@index([type])
-  @@index([status])
-  @@index([priority])
+  @@index([mockExamId])
+  @@index([questionId])
+  @@index([sectionId])
 }
+
+// Feedback model (simplified)
+model Feedback {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  type        String    // "bug", "feature", "general"
+  message     String
+  createdAt   DateTime  @default(now())
+  @@index([userId, createdAt])
+}
+
+model ExperimentGroup {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  feature   String   // e.g., "quiz_ui_variant", "daily_plan_algorithm"
+  variant   String   // e.g., "control", "v2", "v3"
+  assignedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, feature])
+}
+

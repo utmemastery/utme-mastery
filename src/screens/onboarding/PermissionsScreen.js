@@ -1,71 +1,42 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
-import { Text, Button, ActivityIndicator } from 'react-native-paper';
-import * as Notifications from 'expo-notifications';
+import { View, StyleSheet } from 'react-native';
+import { Text, ActivityIndicator } from 'react-native-paper';
 import PrimaryButton from '../../components/PrimaryButton';
+import { COLORS, SIZES, FONTS } from '../../constants/theme';
 
-export default function PermissionsScreen({ navigation, route }) {
+export default function PermissionsScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
-  const [granted, setGranted] = useState(null);
-  const { onFinish } = route.params || {};
 
-  const requestPermission = async () => {
+  const handleAllow = async () => {
     setLoading(true);
-    try {
-      let status;
-      if (Platform.OS === 'web') {
-        status = 'granted'; // Web fallback
-      } else {
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        status = existingStatus;
-        if (existingStatus !== 'granted') {
-          const { status: newStatus } = await Notifications.requestPermissionsAsync();
-          status = newStatus;
-        }
-      }
-      setGranted(status === 'granted');
-    } catch (e) {
-      setGranted(false);
-    }
-    setLoading(false);
+    setTimeout(() => {
+      setLoading(false);
+      navigation.navigate('PersonalizationScreen');
+    }, 1000);
   };
 
-  const handleFinish = () => {
-    // In a real app, save onboarding completion and user preferences
-    console.log('Onboarding completed!');
-    
-    // Trigger the onboarding completion callback
-    if (onFinish) {
-      onFinish();
-    }
+  const handleSkip = () => {
+    navigation.navigate('PersonalizationScreen');
   };
 
   return (
     <View style={styles.container}>
-      <Text variant="headlineMedium" style={styles.title}>Enable Notifications</Text>
-      <Text variant="bodyLarge" style={styles.subtitle}>
-        Stay on track with reminders and updates. You can change this later in settings.
+      <Text style={styles.title}>Stay Informed & Motivated</Text>
+      <Text style={styles.subtitle}>
+        Enable notifications so we can send you reminders, study tips, and important updates to help you stay on track for UTME success.
       </Text>
-      <PrimaryButton
-        style={styles.button}
-        onPress={requestPermission}
-        disabled={loading || granted === true}
-      >
-        {loading ? 'Requesting...' : granted === true ? 'Permission Granted' : 'Enable Notifications'}
-      </PrimaryButton>
-      {loading && <ActivityIndicator style={{ marginTop: 16 }} />}
-      {granted === false && (
-        <Text style={styles.errorText}>
-          Permission denied. You can enable notifications later in settings.
-        </Text>
+      {loading ? (
+        <ActivityIndicator animating color={COLORS.primary} size="large" style={{ marginVertical: SIZES.margin * 2 }} />
+      ) : (
+        <>
+          <PrimaryButton style={styles.button} onPress={handleAllow}>
+            Allow Notifications
+          </PrimaryButton>
+          <PrimaryButton style={[styles.button, styles.secondaryButton]} mode="outlined" onPress={handleSkip}>
+            Maybe Later
+          </PrimaryButton>
+        </>
       )}
-      <Button
-        mode="text"
-        style={styles.skipButton}
-        onPress={handleFinish}
-      >
-        {granted === true ? 'Finish' : 'Skip for now'}
-      </Button>
     </View>
   );
 }
@@ -73,32 +44,36 @@ export default function PermissionsScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: COLORS.background,
     alignItems: 'center',
-    backgroundColor: '#F7F9FC',
-    padding: 24,
+    justifyContent: 'center',
+    padding: SIZES.padding,
   },
   title: {
-    marginBottom: 12,
+    color: COLORS.primary,
+    fontFamily: FONTS.bold,
+    fontSize: SIZES.h3,
     textAlign: 'center',
-    color: '#1A1A1A',
+    marginBottom: SIZES.margin,
   },
   subtitle: {
-    marginBottom: 32,
+    color: COLORS.textSecondary,
+    fontFamily: FONTS.regular,
+    fontSize: SIZES.body,
     textAlign: 'center',
-    color: '#757575',
+    marginBottom: SIZES.margin * 2,
+    lineHeight: 24,
   },
   button: {
-    borderRadius: 8,
     width: '100%',
-    maxWidth: 300,
+    marginTop: SIZES.margin,
+    borderRadius: SIZES.radius,
+    height: SIZES.buttonHeight,
+    justifyContent: 'center',
   },
-  skipButton: {
-    marginTop: 24,
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
-  errorText: {
-    color: '#D32F2F',
-    marginTop: 16,
-    textAlign: 'center',
-  },
-}); 
+});

@@ -1,27 +1,19 @@
-import * as React from 'react';
+import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import HomeScreen from '../screens/main/HomeScreen';
-import PracticeScreen from '../screens/main/PracticeScreen';
-import FlashcardsScreen from '../screens/main/FlashcardsScreen';
+import SplashScreen from '../screens/SplashScreen';
+import AuthNavigator from './AuthNavigator';
+import OnboardingNavigator from './OnboardingNavigator';
+import HomeScreen from '../screens/Home/HomeScreen';
 
 const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
-
-function MainTabs() {
-  return (
-    <Tab.Navigator>
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Practice" component={PracticeScreen} />
-      <Tab.Screen name="Flashcards" component={FlashcardsScreen} />
-    </Tab.Navigator>
-  );
-}
 
 export default function AppNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Main" component={MainTabs} />
+    <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Splash" component={SplashScreen} />
+      <Stack.Screen name="Auth" component={AuthNavigator} />
+      <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
+      <Stack.Screen name="HomeScreen" component={HomeScreen} />
     </Stack.Navigator>
   );
-} 
+}

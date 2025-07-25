@@ -1,13 +1,19 @@
 import React from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, StyleSheet, Image } from 'react-native';
 import { Text } from 'react-native-paper';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, SIZES, FONTS } from '../../constants/theme';
 
+
+
 export default function ResultFeedbackScreen({ navigation }) {
-  const handleContinue = () => {
-    navigation.replace('HomeScreen');
+
+  const handleContinue = async () => {
+    await AsyncStorage.setItem('onboardingComplete', 'true');
+    navigation.replace('Home');
   };
+  
 
   return (
     <View style={styles.container}>

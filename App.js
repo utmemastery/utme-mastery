@@ -1,21 +1,41 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
+import { AuthProvider } from './src/context/AuthContext';
+import { ThemeProvider, ThemeContext } from './src/context/ThemeContext';
 import AppNavigator from './src/navigation/AppNavigator';
-import OnboardingNavigator from './src/navigation/OnboardingNavigator';
-import AuthNavigator from './src/navigation/AuthNavigator';
-import { THEMES } from './src/constants/theme';
+import { navigationRef } from './src/navigation/NavigationService';
+import * as Linking from 'expo-linking';
+
+const linking = {
+  prefixes: ['utme-mastery://'],
+  config: {
+    screens: {
+      ResetPasswordConfirmScreen: {
+        path: 'reset-password',
+      },
+    },
+  },
+};
+
+function RootApp() {
+  const { theme } = useContext(ThemeContext);
+
+  return (
+    <PaperProvider theme={theme}>
+      <AuthProvider>
+        <NavigationContainer linking={linking} ref={navigationRef}>
+          <AppNavigator />
+        </NavigationContainer>
+      </AuthProvider>
+    </PaperProvider>
+  );
+}
 
 export default function App() {
-  // For development/testing: always show onboarding flow first
-  // In production, use state/context to skip onboarding if already completed
   return (
-    <PaperProvider theme={THEMES.light}>
-      <NavigationContainer>
-      <AppNavigator />
-        {/* To test Auth flow, use: <AuthNavigator /> */}
-        {/* To test main app, use: <AppNavigator /> */}
-      </NavigationContainer>
-    </PaperProvider>
+    <ThemeProvider>
+      <RootApp />
+    </ThemeProvider>
   );
 }

@@ -5,6 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "scheme": "utme-mastery",
+    "extra": {
+      "apiBaseUrl": "http://192.168.132.67:5000/api"
+    },
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {

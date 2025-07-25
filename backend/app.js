@@ -1,4 +1,7 @@
+// Load environment variables
 require('dotenv').config();
+const logger = require('./utils/logger');
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -8,12 +11,16 @@ const userRoutes = require('./routes/user');
 const flashcardRoutes = require('./routes/flashcard');
 const quizRoutes = require('./routes/quiz');
 const analyticsRoutes = require('./routes/analytics');
-
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
-app.use(cors());
+// Configure CORS with allowed origin from .env
+app.use(cors({
+  origin: process.env.FRONTEND_URL, // e.g., http://192.168.132.67:8081
+  credentials: true,
+}));
+
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -24,6 +31,10 @@ app.use('/api/flashcards', flashcardRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
+app.get('/api/ping', (req, res) => {
+    logger.info('Ping endpoint hit');
+    res.json({ message: 'Backend is alive' });
+  });
 // Global error handler
 app.use(errorHandler);
 

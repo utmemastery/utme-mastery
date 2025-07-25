@@ -1,89 +1,222 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, TextInput } from 'react-native-paper';
+import React, { useState, useContext } from 'react';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  StatusBar,
+} from 'react-native';
+import { Text, TextInput, ActivityIndicator } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withSpring,
+} from 'react-native-reanimated';
+
 import PrimaryButton from '../../components/PrimaryButton';
-import { COLORS, SIZES, FONTS } from '../../constants/theme';
+import {
+  COLORS,
+  TYPOGRAPHY,
+  SIZES,
+  SHADOWS,
+} from '../../constants/theme';
+
+import { AuthContext } from '../../context/AuthContext';
+import { strings } from '../../constants/strings';
 
 export default function LoginScreen({ navigation }) {
+  const { login } = useContext(AuthContext);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const shake = useSharedValue(0);
+
+  const validateEmail = (email) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const handleLogin = async () => {
     if (!email.trim() || !password) {
-      setError('Please enter your email and password.');
+      setError(strings.errors.emptyFields);
+      triggerShake();
       return;
     }
+
+    if (!validateEmail(email)) {
+      setError(strings.errors.invalidEmail);
+      triggerShake();
+      return;
+    }
+
     setError('');
-    // TODO: Implement real authentication logic
-    navigation.replace('Onboarding');
+    setLoading(true);
+    try {
+      await login(email, password);
+      navigation.replace('Onboarding'); // or Home depending on flow
+    } catch (err) {
+      setError(err.message || strings.errors.loginFailed);
+      triggerShake();
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const triggerShake = () => {
+    shake.value = withSequence(
+      withSpring(-10),
+      withSpring(10),
+      withSpring(-5),
+      withSpring(0)
+    );
+  };
+
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shake.value }],
+  }));
+
+  const motivationalQuote =
+    strings.motivationalQuotes[
+      Math.floor(Math.random() * strings.motivationalQuotes.length)
+    ];
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome Back</Text>
-      <Text style={styles.subtitle}>Sign in to your account</Text>
-      <TextInput
-        mode="outlined"
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        mode="outlined"
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-        secureTextEntry
-      />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      <PrimaryButton style={styles.button} onPress={handleLogin}>
-        Login
-      </PrimaryButton>
-      <TouchableOpacity onPress={() => navigation.navigate('PasswordResetScreen')}>
-        <Text style={styles.link}>Forgot password?</Text>
-      </TouchableOpacity>
-      <View style={styles.signupRow}>
-        <Text style={styles.signupText}>Don't have an account?</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('SignupScreen')}>
-          <Text style={styles.signupLink}>Sign up</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    <LinearGradient
+    colors={[COLORS.primaryDark, COLORS.success]}
+      style={styles.container}
+    >
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        style={styles.flex}
+      >
+        <Animated.View style={[styles.content, shakeStyle]}>
+          <Text style={[styles.title, TYPOGRAPHY.heading2]}>
+            {strings.login.title}
+          </Text>
+          <Text style={[styles.subtitle, TYPOGRAPHY.body]}>
+            {strings.login.subtitle}
+          </Text>
+          <Text style={[styles.quote, TYPOGRAPHY.bodySmall]}>
+            {motivationalQuote}
+          </Text>
+
+          <TextInput
+            mode="outlined"
+            placeholder={strings.login.emailPlaceholder}
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              setError(validateEmail(text) || !text ? '' : strings.errors.invalidEmail);
+            }}
+            style={styles.input}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            error={!!error && email.length > 0}
+            accessibilityLabel="Email input"
+            accessibilityHint="Enter your email address"
+          />
+          <TextInput
+            mode="outlined"
+            placeholder={strings.login.passwordPlaceholder}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            style={styles.input}
+            error={!!error && password.length > 0}
+            accessibilityLabel="Password input"
+            accessibilityHint="Enter your password"
+          />
+
+          {!!error && (
+            <Text style={[styles.error, TYPOGRAPHY.body]}>
+              {error}
+            </Text>
+          )}
+
+          <PrimaryButton
+            style={styles.button}
+            onPress={handleLogin}
+            disabled={loading}
+            accessibilityLabel="Login button"
+            accessibilityHint="Press to log in"
+          >
+            {loading ? (
+              <ActivityIndicator color={COLORS.white} />
+            ) : (
+              strings.login.button
+            )}
+          </PrimaryButton>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('PasswordResetScreen')}
+            accessibilityLabel="Forgot password"
+            accessibilityHint="Navigate to reset screen"
+          >
+            <Text style={styles.link}>
+              {strings.login.forgotPassword}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.signupRow}>
+            <Text style={[styles.signupText, TYPOGRAPHY.body]}>
+              {strings.login.signupPrompt}
+            </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('SignupScreen')}
+              accessibilityLabel="Sign up"
+              accessibilityHint="Create a new account"
+            >
+              <Text style={styles.signupLink}>
+                {strings.login.signupLink}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+  },
+  flex: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
     justifyContent: 'center',
     padding: SIZES.padding,
   },
   title: {
-    color: COLORS.primary,
-    fontFamily: FONTS.bold,
-    fontSize: SIZES.h2,
+    color: COLORS.white,
     textAlign: 'center',
     marginBottom: SIZES.margin / 2,
   },
   subtitle: {
-    color: COLORS.textSecondary,
-    fontFamily: FONTS.regular,
-    fontSize: SIZES.body,
+    color: COLORS.white,
     textAlign: 'center',
     marginBottom: SIZES.margin,
+    opacity: 0.9,
+  },
+  quote: {
+    color: COLORS.white,
+    textAlign: 'center',
+    marginBottom: SIZES.margin,
+    paddingHorizontal: SIZES.padding,
   },
   input: {
-    width: '100%',
     marginBottom: SIZES.margin / 2,
     backgroundColor: COLORS.surface,
-    fontFamily: FONTS.regular,
-    fontSize: SIZES.body,
+    borderRadius: SIZES.radius,
+    ...SHADOWS.card,
   },
   button: {
     width: '100%',
@@ -91,18 +224,17 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.radius,
     height: SIZES.buttonHeight,
     justifyContent: 'center',
+    ...SHADOWS.card,
   },
   error: {
     color: COLORS.danger,
-    fontFamily: FONTS.medium,
-    fontSize: SIZES.body,
-    marginBottom: SIZES.small,
     textAlign: 'center',
+    marginBottom: SIZES.small,
   },
   link: {
     color: COLORS.primary,
-    fontFamily: FONTS.medium,
-    fontSize: SIZES.body,
+    fontFamily: TYPOGRAPHY.label.fontFamily,
+    fontSize: TYPOGRAPHY.label.fontSize,
     textAlign: 'center',
     marginTop: SIZES.small,
     marginBottom: SIZES.margin,
@@ -114,14 +246,13 @@ const styles = StyleSheet.create({
     marginTop: SIZES.margin,
   },
   signupText: {
-    color: COLORS.textSecondary,
-    fontFamily: FONTS.regular,
-    fontSize: SIZES.body,
+    color: COLORS.white,
     marginRight: 4,
+    opacity: 0.9,
   },
   signupLink: {
     color: COLORS.primary,
-    fontFamily: FONTS.medium,
-    fontSize: SIZES.body,
+    fontFamily: TYPOGRAPHY.label.fontFamily,
+    fontSize: TYPOGRAPHY.label.fontSize,
   },
 });

@@ -61,9 +61,10 @@ enum PassageType {
 model User {
   id                  Int                  @id @default(autoincrement())
   email               String               @unique
-  username            String               @unique
-  passwordHash        String
-  avatarUrl     String?
+  username            String?               @unique
+  phoneNumber         String
+  password            String
+  avatarUrl           String?
   firstName           String?
   lastName            String?
   learningStyle       String?              // Moved from LearningProfile
@@ -90,6 +91,8 @@ model User {
   experimentGroups    ExperimentGroup[]
   // Auth fields
   emailVerified       Boolean              @default(false)
+  verificationCode    String?  // NEW
+  verificationCodeExpiry DateTime? // NEW
   verificationToken   String?
   resetToken          String?
   resetTokenExpiry    DateTime?

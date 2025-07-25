@@ -2,6 +2,7 @@ const jwtUtil = require('../utils/jwt');
 
 module.exports = (req, res, next) => {
   const authHeader = req.headers.authorization;
+  console.log('Auth Header:', authHeader);
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'No token provided' });
   }
